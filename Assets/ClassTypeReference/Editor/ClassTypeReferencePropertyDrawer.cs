@@ -126,7 +126,7 @@ namespace TypeReferences
         private static int s_SelectionControlID;
         private static string s_SelectedClassRef;
 
-        private static void DisplayDropDown(Rect position, List<Type> types, Type selectedType, ClassGrouping grouping)
+        private static void DisplayDropDown(Rect position, List<Type> types, Type selectedType, ClassTypeConstraintAttribute filter)
         {
             var menu = new GenericMenu();
 
@@ -137,7 +137,7 @@ namespace TypeReferences
             {
                 var type = types[i];
 
-                string menuLabel = FormatGroupedTypeName(type, grouping);
+                string menuLabel = FormatGroupedTypeName(type, filter);
                 if (string.IsNullOrEmpty(menuLabel))
                 {
                     continue;
@@ -150,11 +150,11 @@ namespace TypeReferences
             menu.DropDown(position);
         }
 
-        private static string FormatGroupedTypeName(Type type, ClassGrouping grouping)
+        private static string FormatGroupedTypeName(Type type, ClassTypeConstraintAttribute filter)
         {
-            string name = type.FullName;
+            string name = filter.ShowFullName ? type.FullName : type.Name;
 
-            switch (grouping)
+            switch (filter.Grouping)
             {
                 default:
                 case ClassGrouping.None:
@@ -248,8 +248,9 @@ namespace TypeReferences
                 case EventType.Repaint:
                     // Remove assembly name from content of popup control.
                     var classRefParts = classRef.Split(',');
+                    var fullname = classRefParts[0].Trim();
 
-                    s_TempContent.text = classRefParts[0].Trim();
+                    s_TempContent.text = filter.ShowFullName ? fullname : GetTypeNameFromFullName(fullname);
                     if (s_TempContent.text == string.Empty)
                     {
                         s_TempContent.text = "(None)";
@@ -269,10 +270,18 @@ namespace TypeReferences
                 s_SelectedClassRef = classRef;
 
                 var filteredTypes = GetFilteredTypes(filter);
-                DisplayDropDown(position, filteredTypes, ResolveType(classRef), filter.Grouping);
+                DisplayDropDown(position, filteredTypes, ResolveType(classRef), filter);
             }
 
             return classRef;
+        }
+
+        private static string GetTypeNameFromFullName(string fullname)
+        {
+            if (fullname == string.Empty) return string.Empty;
+
+            var nameParts = fullname.Split('.');
+            return nameParts.Length == 0 ? string.Empty : nameParts[nameParts.Length - 1];
         }
 
         private void DrawTypeSelectionControl(Rect position, SerializedProperty property, GUIContent label, ClassTypeConstraintAttribute filter)

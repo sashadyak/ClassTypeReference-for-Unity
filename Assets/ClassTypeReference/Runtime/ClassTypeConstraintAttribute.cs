@@ -68,6 +68,8 @@ namespace TypeReferences
             set { _allowAbstract = value; }
         }
 
+        public bool ShowFullName { get; set; } = true;
+
         /// <summary>
         /// Determines whether the specified <see cref="Type"/> satisfies filter constraint.
         /// </summary>
